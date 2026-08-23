@@ -5,6 +5,7 @@ import { fragmentShader, vertexShader } from '../shaders/stipple'
 
 type Props = {
   activeIndex: number
+  onSubjectHoverChange?: (hovered: boolean) => void
   portraits: string[]
   particleCount?: number
   pointSize?: number
@@ -12,14 +13,22 @@ type Props = {
 
 const PORTRAIT_SIZE = 600
 
-export function StippleMorph({ activeIndex, portraits, particleCount = 80000, pointSize = 1.6 }: Props) {
+export function StippleMorph({
+  activeIndex,
+  onSubjectHoverChange,
+  portraits,
+  particleCount = 80000,
+  pointSize = 1.6,
+}: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const revealRef = useRef<HTMLImageElement>(null)
   const targetIndexRef = useRef(activeIndex)
+  const hoverChangeRef = useRef(onSubjectHoverChange)
 
   useLayoutEffect(() => {
     targetIndexRef.current = activeIndex
-  }, [activeIndex])
+    hoverChangeRef.current = onSubjectHoverChange
+  }, [activeIndex, onSubjectHoverChange])
 
   useEffect(() => {
     const host = hostRef.current
@@ -39,15 +48,24 @@ export function StippleMorph({ activeIndex, portraits, particleCount = 80000, po
     let morphTo = current
     let morphStart = performance.now()
     let morphing = false
+    let subjectHovered = false
+
+    const setSubjectHovered = (hovered: boolean) => {
+      if (subjectHovered === hovered) return
+      subjectHovered = hovered
+      hoverChangeRef.current?.(hovered)
+    }
 
     const setRevealVisibility = (visible: boolean) => {
       reveal.style.opacity = visible && !morphing ? '1' : '0'
     }
 
     const pointerMove = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') return
       const cloud = clouds[current]
       if (!cloud || morphing) {
         setRevealVisibility(false)
+        setSubjectHovered(false)
         return
       }
 
@@ -58,10 +76,15 @@ export function StippleMorph({ activeIndex, portraits, particleCount = 80000, po
         setRevealVisibility(false)
         return
       }
-      setRevealVisibility(cloud.subjectMask[y * PORTRAIT_SIZE + x] === 1)
+      const isOverSubject = cloud.subjectMask[y * PORTRAIT_SIZE + x] === 1
+      setRevealVisibility(isOverSubject)
+      if (isOverSubject) setSubjectHovered(true)
     }
 
-    const pointerLeave = () => setRevealVisibility(false)
+    const pointerLeave = (event: PointerEvent) => {
+      setRevealVisibility(false)
+      if (event.pointerType !== 'touch') setSubjectHovered(false)
+    }
     host.dataset.state = 'loading'
 
     const initialize = async () => {
@@ -116,6 +139,7 @@ export function StippleMorph({ activeIndex, portraits, particleCount = 80000, po
           morphTo = next
           morphing = true
           setRevealVisibility(false)
+          setSubjectHovered(false)
 
           const from = geometry.getAttribute('aFrom') as THREE.BufferAttribute
           const to = geometry.getAttribute('aTo') as THREE.BufferAttribute
