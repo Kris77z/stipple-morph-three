@@ -15,6 +15,7 @@ const portraitSources = team.map((member) => member.portrait)
 export default function App() {
   const [active, setActive] = useState(0)
   const [isFocusMode, setIsFocusMode] = useState(false)
+  const [typingStage, setTypingStage] = useState(0)
   const exitTimerRef = useRef<number | null>(null)
   const activeMember = team[active]
 
@@ -71,9 +72,9 @@ export default function App() {
     }
   }, [cancelFocusExit])
 
-  const nameDelay = 720
-  const roleDelay = nameDelay + activeMember.name.length * 52 + 160
-  const bioDelay = roleDelay + activeMember.role.length * 34 + 220
+  useEffect(() => {
+    setTypingStage(0)
+  }, [active, isFocusMode])
 
   return (
     <main
@@ -178,13 +179,30 @@ export default function App() {
       >
         <small className="focus-number">{activeMember.number}</small>
         <h2 className="focus-name">
-          <TypewriterText active={isFocusMode} delay={nameDelay} speed={52} text={activeMember.name} />
+          <TypewriterText
+            active={isFocusMode}
+            delay={720}
+            onComplete={() => setTypingStage((stage) => Math.max(stage, 1))}
+            speed={52}
+            text={activeMember.name}
+          />
         </h2>
         <p className="focus-role">
-          <TypewriterText active={isFocusMode} delay={roleDelay} speed={34} text={activeMember.role} />
+          <TypewriterText
+            active={isFocusMode && typingStage >= 1}
+            delay={120}
+            onComplete={() => setTypingStage((stage) => Math.max(stage, 2))}
+            speed={34}
+            text={activeMember.role}
+          />
         </p>
         <p className="focus-bio">
-          <TypewriterText active={isFocusMode} delay={bioDelay} speed={24} text={activeMember.bio} />
+          <TypewriterText
+            active={isFocusMode && typingStage >= 2}
+            delay={180}
+            speed={24}
+            text={activeMember.bio}
+          />
         </p>
       </aside>
     </main>

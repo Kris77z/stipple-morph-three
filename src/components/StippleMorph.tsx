@@ -39,7 +39,6 @@ export function StippleMorph({
     const count = mobile ? Math.min(particleCount, 32000) : particleCount
     let disposed = false
     let raf = 0
-    let observer: ResizeObserver | undefined
     let renderer: THREE.WebGLRenderer | undefined
     let geometry: THREE.BufferGeometry | undefined
     let material: THREE.ShaderMaterial | undefined
@@ -103,6 +102,7 @@ export function StippleMorph({
         })
         renderer.setClearColor(0x000000, 0)
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3))
+        renderer.setSize(PORTRAIT_SIZE, PORTRAIT_SIZE, false)
         host.prepend(renderer.domElement)
 
         geometry = new THREE.BufferGeometry()
@@ -128,12 +128,6 @@ export function StippleMorph({
         scene.add(particles)
         reveal.src = clouds[current].revealUrl
 
-        const resize = () => {
-          if (!renderer) return
-          const size = Math.min(host.clientWidth, host.clientHeight)
-          renderer.setSize(size, size, false)
-        }
-
         const beginMorph = (next: number) => {
           if (next === current || !geometry || !material) return
           morphTo = next
@@ -151,11 +145,8 @@ export function StippleMorph({
           morphStart = performance.now()
         }
 
-        observer = new ResizeObserver(resize)
-        observer.observe(host)
         host.addEventListener('pointermove', pointerMove)
         host.addEventListener('pointerleave', pointerLeave)
-        resize()
         host.dataset.state = 'ready'
 
         const animate = (now: number) => {
@@ -191,7 +182,6 @@ export function StippleMorph({
     return () => {
       disposed = true
       cancelAnimationFrame(raf)
-      observer?.disconnect()
       host.removeEventListener('pointermove', pointerMove)
       host.removeEventListener('pointerleave', pointerLeave)
       geometry?.dispose()
