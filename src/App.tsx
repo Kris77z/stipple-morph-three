@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { StippleMorph } from './components/StippleMorph'
 import { team } from './data/team'
 
+const portraitSources = team.map((member) => member.portrait)
+
 export default function App() {
   const [active, setActive] = useState(0)
   const member = team[active]
@@ -46,7 +48,7 @@ export default function App() {
         </div>
 
         <div className="visual">
-          <StippleMorph activeIndex={active} portraitCount={team.length} />
+          <StippleMorph activeIndex={active} portraits={portraitSources} />
           <div className="visual-caption">Realtime point correspondence / GLSL morph</div>
         </div>
       </section>

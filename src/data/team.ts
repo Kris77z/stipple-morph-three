@@ -4,7 +4,10 @@ export type TeamMember = {
   location: string
   bio: string
   focus: string[]
+  portrait: string
 }
+
+const sourcePortrait = '/portraits/portrait-source.png'
 
 export const team: TeamMember[] = [
   {
@@ -13,6 +16,7 @@ export const team: TeamMember[] = [
     location: 'London · UK',
     bio: 'Exploring the space between computational graphics, identity and motion.',
     focus: ['WebGL', 'Creative Code', 'Interaction'],
+    portrait: sourcePortrait,
   },
   {
     name: 'Marcus Chen',
@@ -20,6 +24,7 @@ export const team: TeamMember[] = [
     location: 'New York · US',
     bio: 'Building expressive interfaces where typography and realtime graphics meet.',
     focus: ['Product', 'Motion', 'Systems'],
+    portrait: sourcePortrait,
   },
   {
     name: 'Théo Laurent',
@@ -27,6 +32,7 @@ export const team: TeamMember[] = [
     location: 'Paris · FR',
     bio: 'Working with procedural form, digital materials and image-making systems.',
     focus: ['3D', 'Shaders', 'Art Direction'],
+    portrait: sourcePortrait,
   },
   {
     name: 'Priya Anand',
@@ -34,6 +40,7 @@ export const team: TeamMember[] = [
     location: 'Singapore · SG',
     bio: 'Designing calm, tactile digital experiences with a strong sense of rhythm.',
     focus: ['UX', 'Prototyping', 'Motion'],
+    portrait: sourcePortrait,
   },
   {
     name: 'Samuel Osei',
@@ -41,6 +48,7 @@ export const team: TeamMember[] = [
     location: 'Berlin · DE',
     bio: 'Turning ambitious visual concepts into fast, resilient browser experiences.',
     focus: ['React', 'Three.js', 'Performance'],
+    portrait: sourcePortrait,
   },
   {
     name: 'Nora Ellis',
@@ -48,5 +56,6 @@ export const team: TeamMember[] = [
     location: 'Toronto · CA',
     bio: 'Creating identities and digital worlds built around texture, type and movement.',
     focus: ['Identity', 'Editorial', 'Digital'],
+    portrait: sourcePortrait,
   },
 ]

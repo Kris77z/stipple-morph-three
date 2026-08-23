@@ -23,6 +23,9 @@ h1 { margin: 20px 0 25px; font-size: clamp(52px, 6.4vw, 112px); font-weight: 400
 .tags span { border: 1px solid rgba(23,22,17,.25); border-radius: 999px; padding: 7px 11px; font: 400 9px/1 DM Mono, monospace; text-transform: uppercase; }
 .visual { position: relative; width: 100%; height: min(74vh, 820px); min-height: 440px; }
 .stipple-canvas { position: absolute; inset: 0; }
+.stipple-canvas::after { content: "Sampling portrait…"; position: absolute; inset: 0; display: grid; place-items: center; font: 400 10px/1 DM Mono, monospace; letter-spacing: .08em; text-transform: uppercase; opacity: .45; transition: opacity .25s ease; }
+.stipple-canvas[data-state="ready"]::after { opacity: 0; pointer-events: none; }
+.stipple-canvas[data-state="error"]::after { content: "Portrait unavailable"; }
 .stipple-canvas canvas { width: 100%; height: 100%; display: block; }
 .visual-caption { position: absolute; right: 0; bottom: 2px; }
 .controls { display: flex; align-items: center; justify-content: space-between; }
