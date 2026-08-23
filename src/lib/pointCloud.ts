@@ -14,6 +14,7 @@ type ProcessedPortrait = {
 const SAMPLE_SIZE = 600
 const PIXEL_COUNT = SAMPLE_SIZE * SAMPLE_SIZE
 const BACKGROUND_THRESHOLD = 242
+const CHECKERBOARD_THRESHOLD = 224
 
 function seededRandom(seed: number) {
   let state = seed >>> 0
@@ -36,13 +37,14 @@ function loadImage(source: string) {
   })
 }
 
-function isBackgroundPixel(data: Uint8ClampedArray, pixelIndex: number) {
+function isBackgroundPixel(data: Uint8ClampedArray, pixelIndex: number, threshold: number) {
   const offset = pixelIndex * 4
+  if (data[offset + 3] <= 16) return true
   const luminance = data[offset] * 0.299 + data[offset + 1] * 0.587 + data[offset + 2] * 0.114
-  return luminance >= BACKGROUND_THRESHOLD
+  return luminance >= threshold
 }
 
-function processImage(image: HTMLImageElement): ProcessedPortrait {
+function processImage(image: HTMLImageElement, backgroundThreshold: number): ProcessedPortrait {
   const canvas = document.createElement('canvas')
   canvas.width = SAMPLE_SIZE
   canvas.height = SAMPLE_SIZE
@@ -64,7 +66,7 @@ function processImage(image: HTMLImageElement): ProcessedPortrait {
   let queueEnd = 0
 
   const enqueueBackground = (pixelIndex: number) => {
-    if (exteriorBackground[pixelIndex] || !isBackgroundPixel(data, pixelIndex)) return
+    if (exteriorBackground[pixelIndex] || !isBackgroundPixel(data, pixelIndex, backgroundThreshold)) return
     exteriorBackground[pixelIndex] = 1
     floodQueue[queueEnd] = pixelIndex
     queueEnd += 1
@@ -158,7 +160,8 @@ export async function loadPortraitClouds(sources: string[], count: number): Prom
   const uniqueSources = [...new Set(sources)]
   const processedEntries = await Promise.all(uniqueSources.map(async (source) => {
     const image = await loadImage(source)
-    return [source, processImage(image)] as const
+    const threshold = source.includes('kriswillwin') ? CHECKERBOARD_THRESHOLD : BACKGROUND_THRESHOLD
+    return [source, processImage(image, threshold)] as const
   }))
   const processedBySource = new Map(processedEntries)
 

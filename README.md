@@ -9,13 +9,13 @@ The implementation is original and does not depend on Framer. It turns real port
 ## What it does
 
 - Renders 80,000 points in a single Three.js `Points` draw call
-- Loads all six real portrait assets and samples them with an offscreen Canvas
+- Loads all seven real portrait assets and samples them with an offscreen Canvas
 - Flood-fills the exterior white background before building a subject mask
 - Uses cubic darkness weighting and scanline point correspondence
 - Morphs point positions on the GPU with a custom vertex shader
 - Reproduces the source interaction's 2-second quartic stagger and wave displacement
 - Reveals the cut-out source portrait when the pointer is over the subject
-- Synchronizes the WebGL portrait with the six-state team accordion and counter
+- Synchronizes the WebGL portrait with the seven-state team accordion and counter
 - Automatically reduces particle count on mobile
 
 ## Run locally
@@ -39,7 +39,7 @@ src/
 ├── components/
 │   └── StippleMorph.tsx   # Three.js renderer + morph state
 ├── data/
-│   └── team.ts            # Six team members + source portraits
+│   └── team.ts            # Seven team members + source portraits
 ├── lib/
 │   └── pointCloud.ts      # Canvas flood fill, weighting + sampling
 ├── shaders/
@@ -53,7 +53,7 @@ src/
 
 Portrait paths live beside the team data in `src/data/team.ts`. Add PNG or JPEG files under `public/portraits/` and assign a path to each member. At startup the browser loads unique sources in parallel, cover-crops them to 600 × 600, removes the exterior light background, weights pixels by darkness, samples every cloud to the same point count, and sorts the results by scanline before the data reaches the shader.
 
-Transparent PNG portraits and high-contrast portraits on a light background both work. The included six demo states use the six source portraits from the referenced Framer page.
+Transparent PNG portraits and high-contrast portraits on a light background both work. The included states combine the six source portraits from the referenced Framer page with the custom Kriswillwin portrait.
 
 ## Key shader idea
 
