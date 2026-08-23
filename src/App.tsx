@@ -89,7 +89,7 @@ export default function App() {
 
         <div className="brand-note">Design<br />&amp; Branding</div>
         <div className="location-note">Based<br />in London</div>
-        <a className="email-pill" href="#contact">Email us</a>
+        <span className="email-pill">Email us</span>
 
         <span className="plus plus-one">+</span>
         <span className="plus plus-two">+</span>

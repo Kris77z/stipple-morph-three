@@ -12,7 +12,7 @@ export const team: TeamMember[] = [
     name: 'Kriswillwin',
     role: 'Product Manager',
     number: '(001)',
-    bio: 'Turns ambitious ideas into products people love using.',
+    bio: 'Build your own shit mountain',
     focus: ['Product Strategy', 'Roadmapping', 'User Research', 'Analytics', 'Delivery'],
     portrait: '/portraits/kriswillwin.png',
   },

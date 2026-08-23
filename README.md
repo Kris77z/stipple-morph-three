@@ -2,8 +2,6 @@
 
 A standalone React + Three.js reconstruction of the stipple portrait morph interaction from a Framer experiment.
 
-Reference page: https://stale-millions-826025.framer.app/
-
 The implementation is original and does not depend on Framer. It turns real portrait images into GPU-rendered point clouds in the browser.
 
 ## What it does
