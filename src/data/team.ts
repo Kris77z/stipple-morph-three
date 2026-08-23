@@ -1,61 +1,59 @@
 export type TeamMember = {
   name: string
   role: string
-  location: string
+  number: string
   bio: string
   focus: string[]
   portrait: string
 }
 
-const sourcePortrait = '/portraits/portrait-source.png'
-
 export const team: TeamMember[] = [
   {
     name: 'Edward Hank',
-    role: 'Creative Technologist',
-    location: 'London · UK',
-    bio: 'Exploring the space between computational graphics, identity and motion.',
-    focus: ['WebGL', 'Creative Code', 'Interaction'],
-    portrait: sourcePortrait,
+    role: 'Creative Director',
+    number: '(001)',
+    bio: 'Shapes brand identity through bold visual direction.',
+    focus: ['Moodboarding', 'Typography', 'Art Direction'],
+    portrait: '/portraits/01.jpg',
   },
   {
     name: 'Marcus Chen',
-    role: 'Design Engineer',
-    location: 'New York · US',
-    bio: 'Building expressive interfaces where typography and realtime graphics meet.',
-    focus: ['Product', 'Motion', 'Systems'],
-    portrait: sourcePortrait,
+    role: 'Head Of Sales',
+    number: '(002)',
+    bio: 'Turns client relationships into lasting partnerships.',
+    focus: ['Negotiation', 'Client Relations', 'CRM Strategy'],
+    portrait: '/portraits/02.jpg',
+  },
+  {
+    name: 'Julian Cross',
+    role: 'Lead Product Designer',
+    number: '(003)',
+    bio: 'Designs experiences people actually enjoy using.',
+    focus: ['UI/UX Design', 'Prototyping', 'User Research'],
+    portrait: '/portraits/03.jpg',
   },
   {
     name: 'Théo Laurent',
-    role: '3D Artist',
-    location: 'Paris · FR',
-    bio: 'Working with procedural form, digital materials and image-making systems.',
-    focus: ['3D', 'Shaders', 'Art Direction'],
-    portrait: sourcePortrait,
+    role: 'Motion Designer',
+    number: '(004)',
+    bio: 'Brings brands to life through motion and story.',
+    focus: ['Motion Graphics', 'After Effects', 'Video Editing'],
+    portrait: '/portraits/04.jpeg',
   },
   {
     name: 'Priya Anand',
-    role: 'Interaction Designer',
-    location: 'Singapore · SG',
-    bio: 'Designing calm, tactile digital experiences with a strong sense of rhythm.',
-    focus: ['UX', 'Prototyping', 'Motion'],
-    portrait: sourcePortrait,
+    role: 'Front-End Developer',
+    number: '(005)',
+    bio: 'Builds fast, pixel-perfect web experiences.',
+    focus: ['React', 'Framer', 'Performance Optimization'],
+    portrait: '/portraits/05.jpg',
   },
   {
     name: 'Samuel Osei',
-    role: 'Frontend Developer',
-    location: 'Berlin · DE',
-    bio: 'Turning ambitious visual concepts into fast, resilient browser experiences.',
-    focus: ['React', 'Three.js', 'Performance'],
-    portrait: sourcePortrait,
-  },
-  {
-    name: 'Nora Ellis',
-    role: 'Visual Designer',
-    location: 'Toronto · CA',
-    bio: 'Creating identities and digital worlds built around texture, type and movement.',
-    focus: ['Identity', 'Editorial', 'Digital'],
-    portrait: sourcePortrait,
+    role: 'Strategy Consultant',
+    number: '(006)',
+    bio: 'Sharpens brand positioning in crowded markets.',
+    focus: ['Market Positioning', 'Brand Strategy', 'Storytelling'],
+    portrait: '/portraits/06.jpg',
   },
 ]

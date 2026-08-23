@@ -37,8 +37,8 @@ export default function App() {
               <strong>{member.role}</strong>
             </div>
             <div>
-              <span>Based</span>
-              <strong>{member.location}</strong>
+              <span>Index</span>
+              <strong>{member.number}</strong>
             </div>
           </div>
           <p className="bio">{member.bio}</p>

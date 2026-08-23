@@ -65,7 +65,14 @@ function sampleImage(
   const targetCandidates = Math.ceil(count * 1.45)
   const maxAttempts = targetCandidates * 32
   const cloudHeight = CLOUD_WIDTH * (height / width)
+  let translucentPixels = 0
   let attempts = 0
+
+  for (let offset = 3; offset < data.length; offset += 4) {
+    if (data[offset] < 250) translucentPixels += 1
+  }
+
+  const usesAlphaMask = translucentPixels / (width * height) > 0.01
 
   while (points.length < targetCandidates && attempts < maxAttempts) {
     attempts += 1
@@ -80,7 +87,11 @@ function sampleImage(
     if (alpha < 0.025) continue
 
     const luminance = (red * 0.2126 + green * 0.7152 + blue * 0.0722) / 255
-    const density = alpha * (0.18 + (1 - luminance) * 0.82)
+    const darkness = 1 - luminance
+    if (!usesAlphaMask && darkness < 0.055) continue
+    const density = usesAlphaMask
+      ? alpha * (0.18 + darkness * 0.82)
+      : Math.pow((darkness - 0.055) / 0.945, 0.82)
     if (random() > density) continue
 
     const normalizedX = (pixelX + random()) / width

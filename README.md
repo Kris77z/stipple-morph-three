@@ -2,7 +2,9 @@
 
 A standalone React + Three.js study inspired by the stipple portrait morph interaction from a Framer experiment.
 
-The implementation is original and does not depend on Framer. It uses a real PNG portrait as input and turns it into a GPU-rendered point cloud in the browser.
+Reference page: https://stale-millions-826025.framer.app/
+
+The implementation is original and does not depend on Framer. It turns real portrait images into GPU-rendered point clouds in the browser.
 
 ## What it does
 
@@ -49,9 +51,9 @@ src/
 
 ## Using portrait assets
 
-Portrait paths live beside the team data in `src/data/team.ts`. Add PNGs under `public/portraits/` and assign a path to each member. At startup the browser loads unique sources in parallel, draws them to an offscreen Canvas, samples visible pixels according to alpha and luminance, normalizes every cloud to the same point count, and applies Morton ordering before the data reaches the shader.
+Portrait paths live beside the team data in `src/data/team.ts`. Add PNG or JPEG files under `public/portraits/` and assign a path to each member. At startup the browser loads unique sources in parallel, draws them to an offscreen Canvas, samples visible pixels according to alpha and luminance, normalizes every cloud to the same point count, and applies Morton ordering before the data reaches the shader.
 
-Transparent PNG portraits with consistent framing work best. The included six demo states intentionally use the supplied source image with independent deterministic samples, so the morph remains visible until more portraits are added.
+Transparent PNG portraits and high-contrast portraits on a light background both work. The included six demo states use the six source portraits from the referenced Framer page.
 
 ## Key shader idea
 
