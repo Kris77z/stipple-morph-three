@@ -1,20 +1,19 @@
-export type Point = { x: number; y: number; z: number; order: number }
-
-const SAMPLE_SIZE = 512
-const CLOUD_WIDTH = 3.2
-
-function morton(x: number, y: number) {
-  const xx = Math.max(0, Math.min(1023, x | 0))
-  const yy = Math.max(0, Math.min(1023, y | 0))
-  let value = 0
-
-  for (let i = 0; i < 10; i += 1) {
-    value |= ((xx >> i) & 1) << (2 * i)
-    value |= ((yy >> i) & 1) << (2 * i + 1)
-  }
-
-  return value
+export type PortraitCloud = {
+  points: Float32Array
+  revealUrl: string
+  subjectMask: Uint8Array
 }
+
+type ProcessedPortrait = {
+  cumulativeWeights: Float64Array
+  revealUrl: string
+  subjectMask: Uint8Array
+  totalWeight: number
+}
+
+const SAMPLE_SIZE = 600
+const PIXEL_COUNT = SAMPLE_SIZE * SAMPLE_SIZE
+const BACKGROUND_THRESHOLD = 242
 
 function seededRandom(seed: number) {
   let state = seed >>> 0
@@ -37,115 +36,139 @@ function loadImage(source: string) {
   })
 }
 
-function readImage(image: HTMLImageElement) {
-  const longestSide = Math.max(image.naturalWidth, image.naturalHeight)
-  const scale = Math.min(1, SAMPLE_SIZE / longestSide)
-  const width = Math.max(1, Math.round(image.naturalWidth * scale))
-  const height = Math.max(1, Math.round(image.naturalHeight * scale))
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
+function isBackgroundPixel(data: Uint8ClampedArray, pixelIndex: number) {
+  const offset = pixelIndex * 4
+  const luminance = data[offset] * 0.299 + data[offset + 1] * 0.587 + data[offset + 2] * 0.114
+  return luminance >= BACKGROUND_THRESHOLD
+}
 
+function processImage(image: HTMLImageElement): ProcessedPortrait {
+  const canvas = document.createElement('canvas')
+  canvas.width = SAMPLE_SIZE
+  canvas.height = SAMPLE_SIZE
   const context = canvas.getContext('2d', { willReadFrequently: true })
   if (!context) throw new Error('Canvas 2D is unavailable')
 
-  context.clearRect(0, 0, width, height)
-  context.drawImage(image, 0, 0, width, height)
-  return { data: context.getImageData(0, 0, width, height).data, width, height }
-}
+  const scale = Math.max(SAMPLE_SIZE / image.naturalWidth, SAMPLE_SIZE / image.naturalHeight)
+  const drawWidth = image.naturalWidth * scale
+  const drawHeight = image.naturalHeight * scale
+  const offsetX = (SAMPLE_SIZE - drawWidth) / 2
+  const offsetY = (SAMPLE_SIZE - drawHeight) / 2
+  context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight)
 
-function sampleImage(
-  imageData: ReturnType<typeof readImage>,
-  count: number,
-  variant: number,
-): Point[] {
-  const { data, width, height } = imageData
-  const random = seededRandom(0x91e10da5 + variant * 0x9e3779b1)
-  const points: Point[] = []
-  const targetCandidates = Math.ceil(count * 1.45)
-  const maxAttempts = targetCandidates * 32
-  const cloudHeight = CLOUD_WIDTH * (height / width)
-  let translucentPixels = 0
-  let attempts = 0
+  const imageData = context.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE)
+  const { data } = imageData
+  const exteriorBackground = new Uint8Array(PIXEL_COUNT)
+  const floodQueue = new Uint32Array(PIXEL_COUNT)
+  let queueStart = 0
+  let queueEnd = 0
 
-  for (let offset = 3; offset < data.length; offset += 4) {
-    if (data[offset] < 250) translucentPixels += 1
+  const enqueueBackground = (pixelIndex: number) => {
+    if (exteriorBackground[pixelIndex] || !isBackgroundPixel(data, pixelIndex)) return
+    exteriorBackground[pixelIndex] = 1
+    floodQueue[queueEnd] = pixelIndex
+    queueEnd += 1
   }
 
-  const usesAlphaMask = translucentPixels / (width * height) > 0.01
-
-  while (points.length < targetCandidates && attempts < maxAttempts) {
-    attempts += 1
-    const pixelX = Math.min(width - 1, Math.floor(random() * width))
-    const pixelY = Math.min(height - 1, Math.floor(random() * height))
-    const offset = (pixelY * width + pixelX) * 4
-    const red = data[offset]
-    const green = data[offset + 1]
-    const blue = data[offset + 2]
-    const alpha = data[offset + 3] / 255
-
-    if (alpha < 0.025) continue
-
-    const luminance = (red * 0.2126 + green * 0.7152 + blue * 0.0722) / 255
-    const darkness = 1 - luminance
-    if (!usesAlphaMask && darkness < 0.055) continue
-    const density = usesAlphaMask
-      ? alpha * (0.18 + darkness * 0.82)
-      : Math.pow((darkness - 0.055) / 0.945, 0.82)
-    if (random() > density) continue
-
-    const normalizedX = (pixelX + random()) / width
-    const normalizedY = (pixelY + random()) / height
-    const x = (normalizedX - 0.5) * CLOUD_WIDTH
-    const y = (0.5 - normalizedY) * cloudHeight
-
-    points.push({
-      x,
-      y,
-      z: (0.5 - luminance) * 0.045 + (random() - 0.5) * 0.012,
-      order: morton(normalizedX * 1023, (1 - normalizedY) * 1023),
-    })
+  for (let coordinate = 0; coordinate < SAMPLE_SIZE; coordinate += 1) {
+    enqueueBackground(coordinate)
+    enqueueBackground((SAMPLE_SIZE - 1) * SAMPLE_SIZE + coordinate)
+    enqueueBackground(coordinate * SAMPLE_SIZE)
+    enqueueBackground(coordinate * SAMPLE_SIZE + SAMPLE_SIZE - 1)
   }
 
-  if (points.length === 0) throw new Error('Portrait contains no visible pixels')
+  while (queueStart < queueEnd) {
+    const pixelIndex = floodQueue[queueStart]
+    queueStart += 1
+    const x = pixelIndex % SAMPLE_SIZE
+    const y = Math.floor(pixelIndex / SAMPLE_SIZE)
+    if (x > 0) enqueueBackground(pixelIndex - 1)
+    if (x < SAMPLE_SIZE - 1) enqueueBackground(pixelIndex + 1)
+    if (y > 0) enqueueBackground(pixelIndex - SAMPLE_SIZE)
+    if (y < SAMPLE_SIZE - 1) enqueueBackground(pixelIndex + SAMPLE_SIZE)
+  }
 
-  points.sort((a, b) => a.order - b.order)
+  const subjectMask = new Uint8Array(PIXEL_COUNT)
+  const cumulativeWeights = new Float64Array(PIXEL_COUNT)
+  let totalWeight = 0
 
-  return Array.from({ length: count }, (_, index) => {
-    const sourceIndex = Math.min(
-      points.length - 1,
-      Math.floor((index / count) * points.length),
-    )
-    const point = points[sourceIndex]
-    return {
-      ...point,
-      x: point.x + (random() - 0.5) * 0.006,
-      y: point.y + (random() - 0.5) * 0.006,
+  for (let pixelIndex = 0; pixelIndex < PIXEL_COUNT; pixelIndex += 1) {
+    const offset = pixelIndex * 4
+    if (exteriorBackground[pixelIndex]) {
+      data[offset + 3] = 0
+    } else {
+      subjectMask[pixelIndex] = 1
     }
-  })
+
+    const luminance = (data[offset] * 0.299 + data[offset + 1] * 0.587 + data[offset + 2] * 0.114) / 255
+    const darkness = Math.max(0, 1 - luminance)
+    const weight = exteriorBackground[pixelIndex] || darkness <= 0.12
+      ? 0
+      : Math.pow((darkness - 0.12) / 0.88, 3.2)
+    totalWeight += weight
+    cumulativeWeights[pixelIndex] = totalWeight
+  }
+
+  if (totalWeight === 0) throw new Error('Portrait contains no sampleable pixels')
+
+  context.putImageData(imageData, 0, 0)
+  return {
+    cumulativeWeights,
+    revealUrl: canvas.toDataURL('image/png'),
+    subjectMask,
+    totalWeight,
+  }
 }
 
-export async function loadPortraitClouds(sources: string[], count: number) {
+function samplePortrait(portrait: ProcessedPortrait, count: number, seed: number) {
+  const random = seededRandom(seed)
+  const sampled = new Array<{ x: number; y: number }>(count)
+  const { cumulativeWeights, totalWeight } = portrait
+
+  for (let index = 0; index < count; index += 1) {
+    const targetWeight = random() * totalWeight
+    let low = 0
+    let high = PIXEL_COUNT - 1
+
+    while (low < high) {
+      const middle = (low + high) >> 1
+      if (cumulativeWeights[middle] >= targetWeight) high = middle
+      else low = middle + 1
+    }
+
+    sampled[index] = {
+      x: low % SAMPLE_SIZE + random() - 0.5,
+      y: Math.floor(low / SAMPLE_SIZE) + random() - 0.5,
+    }
+  }
+
+  sampled.sort((a, b) => a.y - b.y || a.x - b.x)
+  const points = new Float32Array(count * 3)
+
+  for (let index = 0; index < count; index += 1) {
+    points[index * 3] = sampled[index].x - SAMPLE_SIZE / 2
+    points[index * 3 + 1] = SAMPLE_SIZE / 2 - sampled[index].y
+    points[index * 3 + 2] = 0
+  }
+
+  return points
+}
+
+export async function loadPortraitClouds(sources: string[], count: number): Promise<PortraitCloud[]> {
   const uniqueSources = [...new Set(sources)]
-  const decodedImages = await Promise.all(uniqueSources.map(async (source) => {
+  const processedEntries = await Promise.all(uniqueSources.map(async (source) => {
     const image = await loadImage(source)
-    return [source, readImage(image)] as const
+    return [source, processImage(image)] as const
   }))
-  const imagesBySource = new Map(decodedImages)
+  const processedBySource = new Map(processedEntries)
 
   return sources.map((source, index) => {
-    const image = imagesBySource.get(source)
-    if (!image) throw new Error(`Portrait was not decoded: ${source}`)
-    return pointsToArray(sampleImage(image, count, index))
+    const portrait = processedBySource.get(source)
+    if (!portrait) throw new Error(`Portrait was not processed: ${source}`)
+    return {
+      points: samplePortrait(portrait, count, 0x91e10da5 + index * 0x9e3779b1),
+      revealUrl: portrait.revealUrl,
+      subjectMask: portrait.subjectMask,
+    }
   })
-}
-
-export function pointsToArray(points: Point[]) {
-  const result = new Float32Array(points.length * 3)
-  points.forEach((point, index) => {
-    result[index * 3] = point.x
-    result[index * 3 + 1] = point.y
-    result[index * 3 + 2] = point.z
-  })
-  return result
 }

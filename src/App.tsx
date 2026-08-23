@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { StippleMorph } from './components/StippleMorph'
 import { team } from './data/team'
 
@@ -6,64 +6,86 @@ const portraitSources = team.map((member) => member.portrait)
 
 export default function App() {
   const [active, setActive] = useState(0)
-  const member = team[active]
 
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowRight') setActive((value) => (value + 1) % team.length)
-      if (event.key === 'ArrowLeft') setActive((value) => (value - 1 + team.length) % team.length)
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+        setActive((value) => (value + 1) % team.length)
+      }
+      if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+        setActive((value) => (value - 1 + team.length) % team.length)
+      }
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
-
-  const step = (direction: number) => setActive((value) => (value + direction + team.length) % team.length)
 
   return (
     <main className="page">
-      <header className="topbar">
-        <div className="brand">STIPPLE / MORPH</div>
-        <div className="top-note">React + Three.js experiment</div>
-      </header>
+      <h1 className="team-title">TEAM</h1>
 
-      <section className="hero">
-        <div className="profile" key={active}>
-          <p className="eyebrow">Team / {String(active + 1).padStart(2, '0')}</p>
-          <h1>{member.name}</h1>
-          <div className="rule" />
-          <div className="meta-grid">
-            <div>
-              <span>Role</span>
-              <strong>{member.role}</strong>
-            </div>
-            <div>
-              <span>Index</span>
-              <strong>{member.number}</strong>
-            </div>
-          </div>
-          <p className="bio">{member.bio}</p>
-          <div className="tags">
-            {member.focus.map((item) => <span key={item}>{item}</span>)}
-          </div>
-        </div>
+      <div className="brand-note">Design<br />&amp;<br />Branding</div>
+      <div className="location-note">Based<br />in London</div>
+      <a className="email-pill" href="#contact">Email us</a>
 
-        <div className="visual">
-          <StippleMorph activeIndex={active} portraits={portraitSources} />
-          <div className="visual-caption">Realtime point correspondence / GLSL morph</div>
-        </div>
+      <span className="plus plus-one">+</span>
+      <span className="plus plus-two">+</span>
+      <span className="plus plus-three">+</span>
+
+      <div className="team-counter" aria-live="polite">
+        <span>0</span>
+        <span className="counter-window">
+          <span className="counter-digit" key={active}>{active + 1}</span>
+        </span>
+      </div>
+
+      <section className="portrait-stage">
+        <StippleMorph activeIndex={active} portraits={portraitSources} />
       </section>
 
-      <footer className="controls">
-        <div className="counter">
-          <span>{String(active + 1).padStart(2, '0')}</span>
-          <i />
-          <span>{String(team.length).padStart(2, '0')}</span>
-        </div>
-        <div className="buttons">
-          <button onClick={() => step(-1)} aria-label="Previous person">←</button>
-          <button onClick={() => step(1)} aria-label="Next person">→</button>
-        </div>
-      </footer>
+      <section className="member-card" aria-label="Team members">
+        {team.map((member, index) => {
+          const isActive = index === active
+          return (
+            <Fragment key={member.number}>
+              <button
+                className={`member-row${isActive ? ' is-active' : ''}`}
+                data-member={index + 1}
+                onClick={() => setActive(index)}
+                type="button"
+                aria-expanded={isActive}
+              >
+                <span className="member-collapsed">
+                  <small className="member-number">{member.number}</small>
+                  <span className="member-role">{member.role}</span>
+                  <span className="row-arrow" aria-hidden="true">↗</span>
+                </span>
+
+                <span className="member-expanded">
+                  <span className="member-heading">
+                    <strong className="member-name">{member.name}</strong>
+                    <span className="active-arrow" aria-hidden="true">↗</span>
+                  </span>
+                  <span className="member-bio">{member.bio}</span>
+                  <span className="member-footer">
+                    <small className="member-number">{member.number}</small>
+                    <span className="active-role">{member.role}</span>
+                    <span className="skill-list">
+                      <span className="skill-row">
+                        {member.focus.slice(0, 2).map((skill) => <span className="skill-tag" key={skill}>{skill}</span>)}
+                      </span>
+                      <span className="skill-row">
+                        {member.focus.slice(2).map((skill) => <span className="skill-tag" key={skill}>{skill}</span>)}
+                      </span>
+                    </span>
+                  </span>
+                </span>
+              </button>
+              {index < team.length - 1 && <span className="member-divider" aria-hidden="true" />}
+            </Fragment>
+          )
+        })}
+      </section>
     </main>
   )
 }
