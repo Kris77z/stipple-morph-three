@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { loadPortraitClouds, type PortraitCloud } from '../lib/pointCloud'
 import { fragmentShader, vertexShader } from '../shaders/stipple'
@@ -17,7 +17,7 @@ export function StippleMorph({ activeIndex, portraits, particleCount = 80000, po
   const revealRef = useRef<HTMLImageElement>(null)
   const targetIndexRef = useRef(activeIndex)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     targetIndexRef.current = activeIndex
   }, [activeIndex])
 

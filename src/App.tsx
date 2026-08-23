@@ -24,7 +24,7 @@ export default function App() {
     <main className="page">
       <h1 className="team-title">TEAM</h1>
 
-      <div className="brand-note">Design<br />&amp;<br />Branding</div>
+      <div className="brand-note">Design<br />&amp; Branding</div>
       <div className="location-note">Based<br />in London</div>
       <a className="email-pill" href="#contact">Email us</a>
 
